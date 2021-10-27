@@ -1,4 +1,6 @@
 <template>
+	Allowed Range:
+	<input type="number" v-model="allowedRange" />
 	Hue:
 	<input type="number" v-model="hueValue" />
 	Saturation:
@@ -13,12 +15,12 @@
 	</div>
 	<div>
 		<h1>After:</h1>
-		<div
+		<!-- <div
 			class="colorSquare"
-			v-for="(color, index) in turnedColor"
+			v-for="(color, index) in colorsSplittedByHueRangesToCSSHSL"
 			:key="index"
-			:style="`background-color: ${color}`"
-		></div>
+			:style="`background-color: ${color.hsl}`"
+		/> -->
 	</div>
 </template>
 
@@ -26,15 +28,11 @@
 import colorutil from "color-util";
 import theme from "./theme";
 
-/*
-coloR
-*/
-
 export default {
 	name: "App",
 	data() {
 		return {
-			allowedRange: 0.1,
+			allowedRange: 0.05,
 			themeColors: ["#000000"],
 			hueValue: 0,
 			saturationValue: 0,
@@ -49,6 +47,10 @@ export default {
 			themeColorsSet.add(matchingColor.slice(1, matchingColor.length - 1));
 		});
 		this.themeColors = Array.from(themeColorsSet);
+
+		this.colorsSplittedAndSorted.forEach((color) => {
+			console.log(color.counter);
+		});
 	},
 	methods: {
 		convertToHSL(hexFormatedColor) {
@@ -58,33 +60,43 @@ export default {
 			hsl.s += this.saturationValue / 100;
 			hsl.l += this.lightnessValue / 100;
 			hsl.a += this.alphaValue / 10;
-			return hsl; // return colorutil.hsl.to.csshsl(hsl);
+			return { hex: hexFormatedColor, hsl: hsl };
 		},
-		groupColor(HSLFormattedColor) {
-			return HSLFormattedColor.sort(function (a, b) {
-				return a.h - b.h;
+		convertToCSSHSL(hexHslPair) {
+			return colorutil.hsl.to.csshsl(hexHslPair.hsl);
+		},
+		groupColor(hexHslPair) {
+			return hexHslPair.sort(function (a, b) {
+				return a.hsl.h - b.hsl.h;
 			});
 		},
-		splitColorsByHueRanges(arrayWithSortedHSL) {
-			let highestAmountOfColorsInRange = 0;
-			function callee(element, propIndex) {
-				let localIndex = 0;
-				let amountOfColorsInRangeOfCurrentRing = 0;
-				while (
-					element.h - arrayWithSortedHSL[propIndex + localIndex].h < this.allowedRange ||
-					element.h - arrayWithSortedHSL[propIndex - localIndex].h > -this.allowedRange
-				) {
-					amountOfColorsInRangeOfCurrentRing++;
-					localIndex++;
+		splitColorsByHueRanges(colorsSortedByHue) {
+			const rangeArr = [];
+			colorsSortedByHue.forEach((color, index) => {
+				let counter = 0;
+				for (let i = index + 1; i < colorsSortedByHue.length; i++) {
+					const nextColor = colorsSortedByHue[i];
+					if (color.hsl.h - nextColor.hsl.h < -this.allowedRange) {
+						break;
+					}
+					counter++;
 				}
-				return amountOfColorsInRangeOfCurrentRing;
-			}
-			for (let index = 0; index < arrayWithSortedHSL.length; index++) {
-				const element = arrayWithSortedHSL[index];
-				if (highestAmountOfColorsInRange < callee(element, index)) {
-					highestAmountOfColorsInRange++;
+
+				for (let i = index - 1; i != -1; i--) {
+					const previousColor = colorsSortedByHue[i];
+					if (color.hsl.h - previousColor.hsl.h > this.allowedRange) {
+						break;
+					}
+					counter++;
 				}
-			}
+				rangeArr.push({ ...color, counter: counter });
+			});
+			return rangeArr;
+		},
+		sortRanges(colorsToSortByRange) {
+			return colorsToSortByRange.sort(function (a, b) {
+				return a.counter - b.counter;
+			});
 		}
 	},
 	computed: {
@@ -93,11 +105,14 @@ export default {
 				return this.convertToHSL(color);
 			});
 		},
-		sortedHSL() {
+		sortedByHue() {
 			return this.groupColor(this.turnedColor);
 		},
 		colorsSplittedByHueRanges() {
-			return this.splitColorsByHueRanges(this.sortedHSL);
+			return this.splitColorsByHueRanges(this.sortedByHue);
+		},
+		colorsSplittedAndSorted() {
+			return this.sortRanges(this.colorsSplittedByHueRanges);
 		}
 	}
 };
