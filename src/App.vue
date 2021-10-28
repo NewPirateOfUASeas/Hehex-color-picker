@@ -47,10 +47,6 @@ export default {
 			themeColorsSet.add(matchingColor.slice(1, matchingColor.length - 1));
 		});
 		this.themeColors = Array.from(themeColorsSet);
-
-		this.colorsSplittedAndSorted.forEach((color) => {
-			console.log(color.counter);
-		});
 	},
 	methods: {
 		convertToHSL(hexFormatedColor) {
@@ -66,6 +62,7 @@ export default {
 			return colorutil.hsl.to.csshsl(hexHslPair.hsl);
 		},
 		groupColor(hexHslPair) {
+			console.log(hexHslPair)
 			return hexHslPair.sort(function (a, b) {
 				return a.hsl.h - b.hsl.h;
 			});
@@ -74,12 +71,16 @@ export default {
 			const rangeArr = [];
 			colorsSortedByHue.forEach((color, index) => {
 				let counter = 0;
+				let maxIndex = index;
+				let minIndex = index;
+
 				for (let i = index + 1; i < colorsSortedByHue.length; i++) {
 					const nextColor = colorsSortedByHue[i];
 					if (color.hsl.h - nextColor.hsl.h < -this.allowedRange) {
 						break;
 					}
 					counter++;
+					maxIndex++;
 				}
 
 				for (let i = index - 1; i != -1; i--) {
@@ -88,15 +89,40 @@ export default {
 						break;
 					}
 					counter++;
+					minIndex--;
 				}
-				rangeArr.push({ ...color, counter: counter });
+				rangeArr.push({ ...color, counter: counter, maxIndex: maxIndex, minIndex: minIndex });
 			});
 			return rangeArr;
 		},
 		sortRanges(colorsToSortByRange) {
-			return colorsToSortByRange.sort(function (a, b) {
-				return a.counter - b.counter;
+			const sorted = colorsToSortByRange.sort(function (a, b) {
+				return b.counter - a.counter;
 			});
+			for (let index = 0; index < sorted.length; index++) {
+				const element = sorted[index];
+				element.index = index;
+			}
+			return sorted;
+		},
+		relocateRange(arrSortedByHue, arrayWithRanges) {
+			arrSortedByHue.splice(arrayWithRanges[0].minIndex, arrayWithRanges[0].maxIndex);
+			return arrSortedByHue;
+		},
+		iterativeAttempt(arrSortedByHue) {
+			const dividedArr = [];
+			while (arrSortedByHue.length > 0) {
+				const dividedByRanges = this.splitColorsByHueRanges(arrSortedByHue);
+				const minIndex = dividedByRanges[0].minIndex;
+				const maxIndex = dividedByRanges[0].maxIndex;
+				if (dividedByRanges[0].counter < 1) {
+					arrSortedByHue.shift();
+				} else {
+					const spliceFromArrSortedByHue = arrSortedByHue.splice(minIndex, maxIndex);
+					dividedArr.push(spliceFromArrSortedByHue);
+				}
+			}
+			return dividedArr;
 		}
 	},
 	computed: {
@@ -108,11 +134,14 @@ export default {
 		sortedByHue() {
 			return this.groupColor(this.turnedColor);
 		},
-		colorsSplittedByHueRanges() {
+		colorsWithHueRanges() {
 			return this.splitColorsByHueRanges(this.sortedByHue);
 		},
 		colorsSplittedAndSorted() {
-			return this.sortRanges(this.colorsSplittedByHueRanges);
+			return this.sortRanges(this.colorsWithHueRanges);
+		},
+		iterativeComputed() {
+			return this.iterativeAttempt(this.sortedByHue);
 		}
 	}
 };
