@@ -1,1 +1,1 @@
-Apply sorting algorithm and edit colors by groups
+* Make use of CIEDE2000. Ideally, with WASM & Rust/Julia library.

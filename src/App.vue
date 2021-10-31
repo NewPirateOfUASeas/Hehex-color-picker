@@ -1,148 +1,92 @@
 <template>
+	<template v-if="sourceText.length < 1">
+		<div
+			class="dragndropContainer"
+			:class="{ dragOver: isDragover }"
+			@drag.prevent.stop=""
+			@dragstart.prevent.stop=""
+			@dragend.prevent.stop="isDragover = false"
+			@dragover.prevent.stop="isDragover = true"
+			@dragenter.prevent.stop="isDragover = true"
+			@dragleave.prevent.stop="isDragover = false"
+			@drop.prevent.stop="upload"
+		>
+			<h5>Drop your file here</h5>
+		</div>
+		<p>Or select file from here</p>
+		<input type="file" @change="upload" />
+	</template>
+	<template v-else>
+		<div class="calculatedTextContainer" v-if="calculatedTextfile.length > 0">
+			{{ calculatedTextfile }}
+		</div>
+		<button @click="calcFinalFile">Get new stylesheet</button>
+	</template>
 	Allowed Range:
 	<input type="number" v-model="allowedRange" />
-	Hue:
-	<input type="number" v-model="hueValue" />
-	Saturation:
-	<input type="number" v-model="saturationValue" />
-	Lightness:
-	<input type="number" v-model="lightnessValue" />
-	Alpha:
-	<input type="number" v-model="alphaValue" />
-	<div>
-		<h1>Before:</h1>
-		<div class="colorSquare" v-for="color in themeColors" :key="color" :style="`background-color: ${color}`"></div>
-	</div>
-	<div>
-		<h1>After:</h1>
-		<!-- <div
+	<div v-for="(group, index) in dividedColors" :key="index">
+		<h2>Group {{ index + 1 }}:</h2>
+		<!-- <template name="placeholders for now">
+			<input type="number" v-model="allowedRange" />
+			Hue:
+			<input type="number" v-model="hueValue" />
+			Saturation:
+			<input type="number" v-model="saturationValue" />
+			Lightness:
+			<input type="number" v-model="lightnessValue" />
+			Alpha:
+			<input type="number" v-model="alphaValue" />
+		</template> -->
+		<div
 			class="colorSquare"
-			v-for="(color, index) in colorsSplittedByHueRangesToCSSHSL"
+			v-for="(color, index) in group"
 			:key="index"
-			:style="`background-color: ${color.hsl}`"
-		/> -->
+			:style="`background-color: ${color.csshsl}`"
+		/>
 	</div>
 </template>
 
 <script>
+import sortHex from "./sortHex.js";
 import colorutil from "color-util";
-import theme from "./theme";
 
 export default {
 	name: "App",
 	data() {
 		return {
 			allowedRange: 0.05,
-			themeColors: ["#000000"],
-			hueValue: 0,
-			saturationValue: 0,
-			lightnessValue: 0,
-			alphaValue: 1
+			sourceText: ``,
+			calculatedTextfile: ``,
+			dividedColors: [],
+			alphaValue: 1,
+			isDragover: false
 		};
 	},
-	mounted() {
-		const regexToGrabColors = /"#......"/gm;
-		const themeColorsSet = new Set([]);
-		theme.match(regexToGrabColors).forEach((matchingColor) => {
-			themeColorsSet.add(matchingColor.slice(1, matchingColor.length - 1));
-		});
-		this.themeColors = Array.from(themeColorsSet);
-	},
 	methods: {
-		convertToHSL(hexFormatedColor) {
-			const rgb = colorutil.hex.to.rgb(hexFormatedColor);
-			const hsl = colorutil.rgb.to.hsl(rgb);
-			hsl.h += this.hueValue / 100;
-			hsl.s += this.saturationValue / 100;
-			hsl.l += this.lightnessValue / 100;
-			hsl.a += this.alphaValue / 10;
-			return { hex: hexFormatedColor, hsl: hsl };
+		upload($event) {
+			this.isDragover = false;
+			const files = $event.dataTransfer ? [...$event.dataTransfer.files] : [...$event.target.files];
+			const reader = new FileReader();
+			reader.onload = (file) => {
+				this.sourceText = file.target.result;
+				this.dividedColors = sortHex(file.target.result, this.allowedRange);
+			};
+			reader.readAsText(files[0]);
 		},
-		convertToCSSHSL(hexHslPair) {
-			return colorutil.hsl.to.csshsl(hexHslPair.hsl);
-		},
-		groupColor(hexHslPair) {
-			console.log(hexHslPair)
-			return hexHslPair.sort(function (a, b) {
-				return a.hsl.h - b.hsl.h;
+		calcFinalFile() {
+			let result = this.sourceText;
+			this.dividedColors.forEach((group) => {
+				group.forEach((color) => {
+					const hexBefore = color.hex;
+					const hexNow = colorutil.rgb.to.hex(colorutil.hsl.to.rgb(color.hsl));
+					result = result.replaceAll(hexBefore, hexNow);
+				});
 			});
-		},
-		splitColorsByHueRanges(colorsSortedByHue) {
-			const rangeArr = [];
-			colorsSortedByHue.forEach((color, index) => {
-				let counter = 0;
-				let maxIndex = index;
-				let minIndex = index;
-
-				for (let i = index + 1; i < colorsSortedByHue.length; i++) {
-					const nextColor = colorsSortedByHue[i];
-					if (color.hsl.h - nextColor.hsl.h < -this.allowedRange) {
-						break;
-					}
-					counter++;
-					maxIndex++;
-				}
-
-				for (let i = index - 1; i != -1; i--) {
-					const previousColor = colorsSortedByHue[i];
-					if (color.hsl.h - previousColor.hsl.h > this.allowedRange) {
-						break;
-					}
-					counter++;
-					minIndex--;
-				}
-				rangeArr.push({ ...color, counter: counter, maxIndex: maxIndex, minIndex: minIndex });
-			});
-			return rangeArr;
-		},
-		sortRanges(colorsToSortByRange) {
-			const sorted = colorsToSortByRange.sort(function (a, b) {
-				return b.counter - a.counter;
-			});
-			for (let index = 0; index < sorted.length; index++) {
-				const element = sorted[index];
-				element.index = index;
-			}
-			return sorted;
-		},
-		relocateRange(arrSortedByHue, arrayWithRanges) {
-			arrSortedByHue.splice(arrayWithRanges[0].minIndex, arrayWithRanges[0].maxIndex);
-			return arrSortedByHue;
-		},
-		iterativeAttempt(arrSortedByHue) {
-			const dividedArr = [];
-			while (arrSortedByHue.length > 0) {
-				const dividedByRanges = this.splitColorsByHueRanges(arrSortedByHue);
-				const minIndex = dividedByRanges[0].minIndex;
-				const maxIndex = dividedByRanges[0].maxIndex;
-				if (dividedByRanges[0].counter < 1) {
-					arrSortedByHue.shift();
-				} else {
-					const spliceFromArrSortedByHue = arrSortedByHue.splice(minIndex, maxIndex);
-					dividedArr.push(spliceFromArrSortedByHue);
-				}
-			}
-			return dividedArr;
+			this.calculatedTextfile = result;
 		}
 	},
 	computed: {
-		turnedColor() {
-			return this.themeColors.map((color) => {
-				return this.convertToHSL(color);
-			});
-		},
-		sortedByHue() {
-			return this.groupColor(this.turnedColor);
-		},
-		colorsWithHueRanges() {
-			return this.splitColorsByHueRanges(this.sortedByHue);
-		},
-		colorsSplittedAndSorted() {
-			return this.sortRanges(this.colorsWithHueRanges);
-		},
-		iterativeComputed() {
-			return this.iterativeAttempt(this.sortedByHue);
-		}
+		
 	}
 };
 </script>
@@ -152,5 +96,30 @@ export default {
 	width: 25px;
 	height: 25px;
 	display: inline-flex;
+}
+.dragndropContainer {
+	border: 2px solid rgb(126, 233, 126);
+	min-width: 250px;
+	width: 15%;
+	min-height: 300px;
+	max-height: 25%;
+	display: flex;
+	justify-content: center;
+}
+.dragOver {
+	background-color: rgba(124, 185, 124, 0.527);
+}
+.dragndropContainer > h5 {
+	text-align: center;
+}
+.calculatedTextContainer {
+	width: 95%;
+	margin-top: 5%;
+	margin-bottom: 5%;
+	margin-left: auto;
+	margin-right: auto;
+	height: 30vh;
+	overflow: auto;
+	border: 2px solid black;
 }
 </style>
