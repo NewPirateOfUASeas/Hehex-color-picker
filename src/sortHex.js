@@ -32,7 +32,6 @@ function sortHex(colors, allowedRange) {
 			let counter = 0;
 			let maxIndex = 0;
 			let minIndex = 0;
-			// eslint-disable-next-line for-direction
 			for (let i = index + 1; i < colorsSortedByHue.length; i++) {
 				const nextColor = colorsSortedByHue[i];
 				if (color.hsl.h - nextColor.hsl.h > allowedRange) {
