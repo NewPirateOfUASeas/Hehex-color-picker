@@ -15,6 +15,10 @@
 		</div>
 		<p>Or select file from here</p>
 		<input type="file" @change="upload" />
+		<div>
+			Allowed Range (dont touch it if u're unsure):
+			<input type="number" v-model="allowedRange" />
+		</div>
 	</template>
 	<template v-else>
 		<div class="calculatedTextContainer" v-if="calculatedTextfile.length > 0">
@@ -22,27 +26,25 @@
 		</div>
 		<button @click="calcFinalFile">Get new stylesheet</button>
 	</template>
-	Allowed Range:
-	<input type="number" v-model="allowedRange" />
-	<div v-for="(group, index) in dividedColors" :key="index">
+
+	<div v-for="(group, index) in shiftedColors" :key="index">
 		<h2>Group {{ index + 1 }}:</h2>
-		<!-- <template name="placeholders for now">
-			<input type="number" v-model="allowedRange" />
-			Hue:
-			<input type="number" v-model="hueValue" />
-			Saturation:
-			<input type="number" v-model="saturationValue" />
-			Lightness:
-			<input type="number" v-model="lightnessValue" />
-			Alpha:
-			<input type="number" v-model="alphaValue" />
-		</template> -->
-		<div
-			class="colorSquare"
-			v-for="(color, index) in group"
-			:key="index"
-			:style="`background-color: ${color.csshsl}`"
-		/>
+		Hue:
+		<input step="1" type="number" v-model="dividedColors[index].shiftValues.hueShift" />
+		Saturation:
+		<input step="1" type="number" v-model="dividedColors[index].shiftValues.saturationShift" />
+		Lightness:
+		<input step="1" type="number" v-model="dividedColors[index].shiftValues.lightnessShift" />
+		<!-- Alpha:
+		<input type="number" v-model="alphaValue" /> -->
+		<div>
+			<div
+				class="colorSquare"
+				v-for="(color, index) in group.chunk"
+				:key="index"
+				:style="`background-color: ${color.final.csshsl}`"
+			/>
+		</div>
 	</div>
 </template>
 
@@ -70,15 +72,25 @@ export default {
 			reader.onload = (file) => {
 				this.sourceText = file.target.result;
 				this.dividedColors = sortHex(file.target.result, this.allowedRange);
+				for (let index = 0; index < this.dividedColors.length; index++) {
+					this.dividedColors[index] = {
+						chunk: this.dividedColors[index],
+						shiftValues: {
+							hueShift: 0,
+							saturationShift: 0,
+							lightnessShift: 0
+						}
+					};
+				}
 			};
 			reader.readAsText(files[0]);
 		},
 		calcFinalFile() {
 			let result = this.sourceText;
 			this.dividedColors.forEach((group) => {
-				group.forEach((color) => {
+				group.chunk.forEach((color) => {
 					const hexBefore = color.hex;
-					const hexNow = colorutil.rgb.to.hex(colorutil.hsl.to.rgb(color.hsl));
+					const hexNow = colorutil.rgb.to.hex(colorutil.hsl.to.rgb(color.final.hsl));
 					result = result.replaceAll(hexBefore, hexNow);
 				});
 			});
@@ -86,7 +98,29 @@ export default {
 		}
 	},
 	computed: {
-		
+		shiftedColors() {
+			const dividedColors = this.dividedColors.slice();
+			for (let index = 0; index < dividedColors.length; index++) {
+				for (let i = 0; i < dividedColors[index].chunk.length; i++) {
+					const color = dividedColors[index].chunk[i];
+
+					const hueShift = this.dividedColors[index].shiftValues.hueShift;
+					const saturationShift = this.dividedColors[index].shiftValues.saturationShift;
+					const lightnessShift = this.dividedColors[index].shiftValues.lightnessShift;
+
+					color.final = {
+						hsl: {
+							h: color.hsl.h + 0.01 * hueShift,
+							s: color.hsl.s + 0.01 * saturationShift,
+							l: color.hsl.l + 0.01 * lightnessShift,
+							a: color.hsl.a
+						}
+					};
+					color.final.csshsl = colorutil.hsl.to.csshsl(color.final.hsl);
+				}
+			}
+			return dividedColors;
+		}
 	}
 };
 </script>

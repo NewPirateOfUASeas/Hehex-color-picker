@@ -1,1 +1,2 @@
 * Make use of CIEDE2000. Ideally, with WASM & Rust/Julia library.
+* Optionally, split this code into components. While this will (at least should) improve performance and readability, it is quite time consuming.
