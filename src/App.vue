@@ -21,45 +21,40 @@
 		</div>
 	</template>
 	<template v-else>
+		<!-- If i was fanatical about "single-responsiblity" i'd move it in separate component, but i'll
+		keep it here since i'm a sane person -->
 		<div class="calculatedTextContainer" v-if="calculatedTextfile.length > 0">
 			{{ calculatedTextfile }}
+			<img @click="putCalculatedStyleInClipboard" class="copyIcon" src="./assets/icons/copy_icon.svg" />
 		</div>
 		<button @click="calcFinalFile">Get new stylesheet</button>
 	</template>
-
-	<div v-for="(group, index) in shiftedColors" :key="index">
-		<h2>Group {{ index + 1 }}:</h2>
-		Hue:
-		<input step="1" type="number" v-model="dividedColors[index].shiftValues.hueShift" />
-		Saturation:
-		<input step="1" type="number" v-model="dividedColors[index].shiftValues.saturationShift" />
-		Lightness:
-		<input step="1" type="number" v-model="dividedColors[index].shiftValues.lightnessShift" />
-		<!-- Alpha:
-		<input type="number" v-model="alphaValue" /> -->
-		<div>
-			<div
-				class="colorSquare"
-				v-for="(color, index) in group.chunk"
-				:key="index"
-				:style="`background-color: ${color.final.csshsl}`"
-			/>
-		</div>
-	</div>
+	<color-group
+		v-for="(group, index) in dividedColors"
+		:key="index"
+		:index="index"
+		:group="group"
+		@shifted-colors="this.shiftedColors[index] = $event"
+	/>
 </template>
 
 <script>
 import sortHex from "./sortHex.js";
 import colorutil from "color-util";
+import ColorGroup from "./components/ColorGroup.vue";
 
 export default {
 	name: "App",
+	components: {
+		ColorGroup
+	},
 	data() {
 		return {
 			allowedRange: 0.05,
 			sourceText: ``,
 			calculatedTextfile: ``,
 			dividedColors: [],
+			shiftedColors: [],
 			alphaValue: 1,
 			isDragover: false
 		};
@@ -72,65 +67,28 @@ export default {
 			reader.onload = (file) => {
 				this.sourceText = file.target.result;
 				this.dividedColors = sortHex(file.target.result, this.allowedRange);
-				for (let index = 0; index < this.dividedColors.length; index++) {
-					this.dividedColors[index] = {
-						chunk: this.dividedColors[index],
-						shiftValues: {
-							hueShift: 0,
-							saturationShift: 0,
-							lightnessShift: 0
-						}
-					};
-				}
 			};
 			reader.readAsText(files[0]);
 		},
 		calcFinalFile() {
 			let result = this.sourceText;
-			this.dividedColors.forEach((group) => {
-				group.chunk.forEach((color) => {
-					const hexBefore = color.hex;
-					const hexNow = colorutil.rgb.to.hex(colorutil.hsl.to.rgb(color.final.hsl));
+			this.shiftedColors.forEach((group) => {
+				group.forEach((color) => {
+					const hexBefore = color.initialHex;
+					const hexNow = colorutil.rgb.to.hex(colorutil.hsl.to.rgb(color.hsl));
 					result = result.replaceAll(hexBefore, hexNow);
 				});
 			});
 			this.calculatedTextfile = result;
-		}
-	},
-	computed: {
-		shiftedColors() {
-			const dividedColors = this.dividedColors.slice();
-			for (let index = 0; index < dividedColors.length; index++) {
-				for (let i = 0; i < dividedColors[index].chunk.length; i++) {
-					const color = dividedColors[index].chunk[i];
-
-					const hueShift = this.dividedColors[index].shiftValues.hueShift;
-					const saturationShift = this.dividedColors[index].shiftValues.saturationShift;
-					const lightnessShift = this.dividedColors[index].shiftValues.lightnessShift;
-
-					color.final = {
-						hsl: {
-							h: color.hsl.h + 0.01 * hueShift,
-							s: color.hsl.s + 0.01 * saturationShift,
-							l: color.hsl.l + 0.01 * lightnessShift,
-							a: color.hsl.a
-						}
-					};
-					color.final.csshsl = colorutil.hsl.to.csshsl(color.final.hsl);
-				}
-			}
-			return dividedColors;
+		},
+		putCalculatedStyleInClipboard() {
+			navigator.clipboard.writeText(this.calculatedTextfile);
 		}
 	}
 };
 </script>
 
 <style scoped>
-.colorSquare {
-	width: 25px;
-	height: 25px;
-	display: inline-flex;
-}
 .dragndropContainer {
 	border: 2px solid rgb(126, 233, 126);
 	min-width: 250px;
@@ -155,5 +113,21 @@ export default {
 	height: 30vh;
 	overflow: auto;
 	border: 2px solid black;
+}
+
+.copyIcon {
+	height: 10vh;
+	width: 10vw;
+	position: absolute;
+	top: 10vh;
+	right: 3vw;
+	opacity: 0.8;
+}
+.copyIcon:hover {
+	opacity: 1;
+	cursor: pointer;
+}
+.copyIcon:active {
+	filter: drop-shadow(0.5rem 0.5rem 1rem black);
 }
 </style>

@@ -1,2 +1,3 @@
 * Make use of CIEDE2000. Ideally, with WASM & Rust/Julia library.
-* Optionally, split this code into components. While this will (at least should) improve performance and readability, it is quite time consuming.
+* Replace Regex with proper tokenizer. Still, it will take too much time atm, i dont think it's as necessary as tests.
+* Redesign, although I don't think it's that important
