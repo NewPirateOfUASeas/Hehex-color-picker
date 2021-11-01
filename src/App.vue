@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import sortHex from "./sortHex.js";
+import sortHex from "./helpers/sortHex.js";
 import colorutil from "color-util";
 import ColorGroup from "./components/ColorGroup.vue";
 
