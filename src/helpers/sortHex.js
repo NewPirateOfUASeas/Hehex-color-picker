@@ -7,7 +7,7 @@ function sortHex(colors, allowedRange) {
 		const hsl = colorutil.rgb.to.hsl(rgb);
 		return { hex: hexFormattedColor, hsl: hsl };
 	}
-	function iterativeAttempt(arrSortedByHue) {
+	function splitArrIntoGroups(arrSortedByHue) {
 		let dividedArr = [];
 		while (arrSortedByHue.length > 0) {
 			const arrSortedByCounter = sortRanges(splitColorsByHueRanges(arrSortedByHue));
@@ -72,15 +72,8 @@ function sortHex(colors, allowedRange) {
 		return convertHexToHSL(color);
 	});
 	const sortedColorsByHue = sortColorByHue(themeColors);
-	const iterative = iterativeAttempt(sortedColorsByHue);
-	for (let index = 0; index < iterative.length; index++) {
-		const group = iterative[index];
-		for (let index = 0; index < group.length; index++) {
-			const color = group[index];
-			group[index].csshsl = colorutil.hsl.to.csshsl(color.hsl);
-		}
-	}
-	return iterative;
+	const result = splitArrIntoGroups(sortedColorsByHue);
+	return result;
 }
 
 export default sortHex;

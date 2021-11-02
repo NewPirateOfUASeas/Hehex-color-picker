@@ -66,7 +66,17 @@ export default {
 			const reader = new FileReader();
 			reader.onload = (file) => {
 				this.sourceText = file.target.result;
-				this.dividedColors = sortHex(file.target.result, this.allowedRange);
+				const sortedColors = sortHex(file.target.result, this.allowedRange);
+				//following loop just adds csshsl to "color" object
+				//It will be handy in
+				for (let index = 0; index < sortedColors.length; index++) {
+					const group = sortedColors[index];
+					for (let index = 0; index < group.length; index++) {
+						const color = group[index];
+						color.csshsl = colorutil.hsl.to.csshsl(color.hsl);
+					}
+				}
+				this.dividedColors = sortedColors;
 			};
 			reader.readAsText(files[0]);
 		},
@@ -114,7 +124,6 @@ export default {
 	overflow: auto;
 	border: 2px solid black;
 }
-
 .copyIcon {
 	height: 10vh;
 	width: 10vw;
