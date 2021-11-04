@@ -42,6 +42,7 @@
 import sortHex from "./helpers/sortHex.js";
 import colorutil from "color-util";
 import ColorGroup from "./components/ColorGroup.vue";
+import convertHexToLab from "./helpers/convertHexToLab.js";
 
 export default {
 	name: "App",
@@ -50,7 +51,7 @@ export default {
 	},
 	data() {
 		return {
-			allowedRange: 0.05,
+			allowedRange: 15,
 			sourceText: ``,
 			calculatedTextfile: ``,
 			dividedColors: [],
@@ -75,7 +76,15 @@ export default {
 						color.csshsl = colorutil.hsl.to.csshsl(color.hsl);
 					}
 				}
-				this.dividedColors = sortedColors;
+				const properlySortedColors = convertHexToLab(file.target.result, this.allowedRange);
+				const converted = properlySortedColors.map((group) => {
+					return group.map((color) => {
+						const hsl = colorutil.rgb.to.hsl(colorutil.hex.to.rgb(color));
+						const csshsl = colorutil.hsl.to.csshsl(hsl);
+						return { hex: color, hsl: hsl, csshsl: csshsl };
+					});
+				});
+				this.dividedColors = converted;
 			};
 			reader.readAsText(files[0]);
 		},
@@ -109,7 +118,7 @@ export default {
 }
 .dragndropContainer > h5 {
 	text-align: center;
-	line-height: 40;
+	font-size: 10vh;
 }
 .calculatedTextContainer {
 	width: 95%;

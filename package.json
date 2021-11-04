@@ -8,9 +8,10 @@
 		"lint": "vue-cli-service lint"
 	},
 	"dependencies": {
+		"color-convert": "^2.0.1",
 		"color-util": "^2.2.1",
+		"colorlab": "^0.2.2",
 		"core-js": "^3.17.3",
-		"tinycolor2": "^1.4.2",
 		"vue": "^3.2.11"
 	},
 	"devDependencies": {
