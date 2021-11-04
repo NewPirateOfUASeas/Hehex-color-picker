@@ -1,4 +1,5 @@
 import colorutil from "color-util";
+import { remove } from "lodash";
 
 function sortHex(colors, allowedRange) {
 	const regexToGrabColors = /"#......"/gm;
@@ -64,6 +65,17 @@ function sortHex(colors, allowedRange) {
 			return b.counter - a.counter;
 		});
 	}
+	function sortOutGrayishColors(colorsSortedByRange) {
+		const grayishColorsArr = [];
+		for (let index = 0; index < colorsSortedByRange.length; index++) {
+			const group = colorsSortedByRange[index];
+			const grayishColors = remove(group, function (color) {
+				return color.hsl.s < 0.17;
+			});
+			grayishColorsArr.push(...grayishColors);
+		}
+		return [...colorsSortedByRange, grayishColorsArr];
+	}
 	const themeColorsSet = new Set([]);
 	colors.match(regexToGrabColors).forEach((matchingColor) => {
 		themeColorsSet.add(matchingColor.slice(1, matchingColor.length - 1));
@@ -72,8 +84,12 @@ function sortHex(colors, allowedRange) {
 		return convertHexToHSL(color);
 	});
 	const sortedColorsByHue = sortColorByHue(themeColors);
-	const result = splitArrIntoGroups(sortedColorsByHue);
-	return result;
+	const splittedIntoGroups = splitArrIntoGroups(sortedColorsByHue);
+	const sortedOutGrayishColors = sortOutGrayishColors(splittedIntoGroups);
+	remove(sortedOutGrayishColors, function (color) {
+		return color.length === 0;
+	});
+	return sortedOutGrayishColors;
 }
 
 export default sortHex;
