@@ -10,7 +10,7 @@ function sortHex(colors, allowedRange) {
 	function splitArrIntoGroups(arrSortedByHue) {
 		let dividedArr = [];
 		while (arrSortedByHue.length > 0) {
-			const arrSortedByCounter = sortRanges(splitColorsByHueRanges(arrSortedByHue));
+			const arrSortedByCounter = sortRanges(calculatePossibleHueRanges(arrSortedByHue));
 			const index = arrSortedByCounter[0].index;
 			const startingPoint = arrSortedByCounter[0].minIndex + index;
 			//it's still summed because minIndex is negative number
@@ -26,7 +26,7 @@ function sortHex(colors, allowedRange) {
 			return b.hsl.h - a.hsl.h;
 		});
 	}
-	function splitColorsByHueRanges(colorsSortedByHue) {
+	function calculatePossibleHueRanges(colorsSortedByHue) {
 		const rangeArr = [];
 		colorsSortedByHue.forEach((color, index) => {
 			let counter = 0;

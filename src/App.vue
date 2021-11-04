@@ -67,8 +67,7 @@ export default {
 			reader.onload = (file) => {
 				this.sourceText = file.target.result;
 				const sortedColors = sortHex(file.target.result, this.allowedRange);
-				//following loop just adds csshsl to "color" object
-				//It will be handy in
+				//following loop just adds csshsl property to "color" object
 				for (let index = 0; index < sortedColors.length; index++) {
 					const group = sortedColors[index];
 					for (let index = 0; index < group.length; index++) {
@@ -101,10 +100,7 @@ export default {
 <style scoped>
 .dragndropContainer {
 	border: 2px solid rgb(126, 233, 126);
-	min-width: 250px;
-	width: 15%;
-	min-height: 300px;
-	max-height: 25%;
+	width: 100%;
 	display: flex;
 	justify-content: center;
 }
@@ -113,6 +109,7 @@ export default {
 }
 .dragndropContainer > h5 {
 	text-align: center;
+	line-height: 40;
 }
 .calculatedTextContainer {
 	width: 95%;
