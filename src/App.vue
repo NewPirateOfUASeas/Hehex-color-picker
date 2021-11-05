@@ -62,7 +62,7 @@ export default {
 			shiftedColors: [],
 			alphaValue: 1,
 			isDragover: false,
-			regex: '/"#......"/gm'
+			regex: "/#[A-F-a-f 0-9]{6,8}/gm"
 		};
 	},
 	methods: {

@@ -3,7 +3,13 @@ import { remove } from "lodash";
 
 function sortHex(colors, allowedRange, regexToGrabColors) {
 	function convertHexToHSL(hexFormattedColor) {
-		const rgb = colorutil.hex.to.rgb(hexFormattedColor);
+		let rgb;
+		if (hexFormattedColor.length > 8) {
+			let hexAsArr = [hexFormattedColor.slice(0, 7), "0x" + hexFormattedColor.slice(-2)];
+			rgb = colorutil.hex.to.rgb(hexAsArr[0], eval(hexAsArr[1]));
+		} else {
+			rgb = colorutil.hex.to.rgb(hexFormattedColor);
+		}
 		const hsl = colorutil.rgb.to.hsl(rgb);
 		return { hex: hexFormattedColor, hsl: hsl };
 	}
@@ -79,7 +85,7 @@ function sortHex(colors, allowedRange, regexToGrabColors) {
 	}
 	const themeColorsSet = new Set([]);
 	colors.match(regexToGrabColors).forEach((matchingColor) => {
-		themeColorsSet.add(matchingColor.slice(1, matchingColor.length - 1));
+		themeColorsSet.add(matchingColor);
 	});
 	const themeColors = Array.from(themeColorsSet).map((color) => {
 		return convertHexToHSL(color);
@@ -92,5 +98,4 @@ function sortHex(colors, allowedRange, regexToGrabColors) {
 	});
 	return sortedOutGrayishColors;
 }
-
 export default sortHex;
