@@ -16,8 +16,13 @@
 		<p>Or select file from here</p>
 		<input type="file" @change="upload" />
 		<div>
-			Allowed Range (dont touch it if u're unsure):
-			<input type="number" v-model="allowedRange" />
+			<details>
+				<summary>Settings (dont touch it if u're unsure)</summary>
+				Regex:
+				<input v-model="regex" />
+				Allowed Range
+				<input type="number" v-model="allowedRange" />
+			</details>
 		</div>
 	</template>
 	<template v-else>
@@ -56,7 +61,8 @@ export default {
 			dividedColors: [],
 			shiftedColors: [],
 			alphaValue: 1,
-			isDragover: false
+			isDragover: false,
+			regex: '/"#......"/gm'
 		};
 	},
 	methods: {
@@ -66,7 +72,10 @@ export default {
 			const reader = new FileReader();
 			reader.onload = (file) => {
 				this.sourceText = file.target.result;
-				const sortedColors = sortHex(file.target.result, this.allowedRange);
+				//eval isn't safe and blah blah blah ikr? It's here only because i want
+				//JiT compiler to compile my regex
+				//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#creating_a_regular_expression
+				const sortedColors = sortHex(file.target.result, this.allowedRange, eval(this.regex));
 				//following loop just adds csshsl property to "color" object
 				for (let index = 0; index < sortedColors.length; index++) {
 					const group = sortedColors[index];
@@ -75,6 +84,10 @@ export default {
 						color.csshsl = colorutil.hsl.to.csshsl(color.hsl);
 					}
 				}
+				//sort by length
+				sortedColors.sort((a, b) => {
+					return b.length - a.length;
+				});
 				this.dividedColors = sortedColors;
 			};
 			reader.readAsText(files[0]);
@@ -109,7 +122,7 @@ export default {
 }
 .dragndropContainer > h5 {
 	text-align: center;
-	line-height: 40;
+	font-size: 10vh;
 }
 .calculatedTextContainer {
 	width: 95%;

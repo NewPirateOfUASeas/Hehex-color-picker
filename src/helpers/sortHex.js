@@ -1,8 +1,7 @@
 import colorutil from "color-util";
 import { remove } from "lodash";
 
-function sortHex(colors, allowedRange) {
-	const regexToGrabColors = /"#......"/gm;
+function sortHex(colors, allowedRange, regexToGrabColors) {
 	function convertHexToHSL(hexFormattedColor) {
 		const rgb = colorutil.hex.to.rgb(hexFormattedColor);
 		const hsl = colorutil.rgb.to.hsl(rgb);
@@ -61,16 +60,18 @@ function sortHex(colors, allowedRange) {
 		return rangeArr;
 	}
 	function sortRanges(colorsToSortByRange) {
-		return colorsToSortByRange.sort(function (a, b) {
+		return colorsToSortByRange.sort((a, b) => {
 			return b.counter - a.counter;
 		});
 	}
 	function sortOutGrayishColors(colorsSortedByRange) {
+		const lowestSaturationAllowed = 0.17;
+		const lowestLightnessAllowed = 0.1;
 		const grayishColorsArr = [];
 		for (let index = 0; index < colorsSortedByRange.length; index++) {
 			const group = colorsSortedByRange[index];
 			const grayishColors = remove(group, function (color) {
-				return color.hsl.s < 0.17;
+				return color.hsl.s < lowestSaturationAllowed || color.hsl.l < lowestLightnessAllowed;
 			});
 			grayishColorsArr.push(...grayishColors);
 		}
@@ -86,7 +87,7 @@ function sortHex(colors, allowedRange) {
 	const sortedColorsByHue = sortColorByHue(themeColors);
 	const splittedIntoGroups = splitArrIntoGroups(sortedColorsByHue);
 	const sortedOutGrayishColors = sortOutGrayishColors(splittedIntoGroups);
-	remove(sortedOutGrayishColors, function (color) {
+	remove(sortedOutGrayishColors, (color) => {
 		return color.length === 0;
 	});
 	return sortedOutGrayishColors;
