@@ -1,7 +1,7 @@
 import colorutil from "color-util";
 import { remove } from "lodash";
 
-function sortHex(colors, allowedRange, regexToGrabColors) {
+function sortHex(textFileWithColors, allowedRange, regexToGrabColors) {
 	function convertHexToHSL(hexFormattedColor) {
 		let rgb;
 		if (hexFormattedColor.length > 8) {
@@ -70,13 +70,11 @@ function sortHex(colors, allowedRange, regexToGrabColors) {
 			return b.counter - a.counter;
 		});
 	}
-	function sortOutGrayishColors(colorsSortedByRange) {
-		const lowestSaturationAllowed = 0.17;
-		const lowestLightnessAllowed = 0.1;
+	function sortOutGrayishColors(colorsSortedByRange, lowestSaturationAllowed = 0.17, lowestLightnessAllowed = 0.1) {
 		const grayishColorsArr = [];
 		for (let index = 0; index < colorsSortedByRange.length; index++) {
 			const group = colorsSortedByRange[index];
-			const grayishColors = remove(group, function (color) {
+			const grayishColors = remove(group, (color) => {
 				return color.hsl.s < lowestSaturationAllowed || color.hsl.l < lowestLightnessAllowed;
 			});
 			grayishColorsArr.push(...grayishColors);
@@ -84,7 +82,7 @@ function sortHex(colors, allowedRange, regexToGrabColors) {
 		return [...colorsSortedByRange, grayishColorsArr];
 	}
 	const themeColorsSet = new Set([]);
-	colors.match(regexToGrabColors).forEach((matchingColor) => {
+	textFileWithColors.match(regexToGrabColors).forEach((matchingColor) => {
 		themeColorsSet.add(matchingColor);
 	});
 	const themeColors = Array.from(themeColorsSet).map((color) => {
@@ -93,6 +91,9 @@ function sortHex(colors, allowedRange, regexToGrabColors) {
 	const sortedColorsByHue = sortColorByHue(themeColors);
 	const splittedIntoGroups = splitArrIntoGroups(sortedColorsByHue);
 	const sortedOutGrayishColors = sortOutGrayishColors(splittedIntoGroups);
+	// Removes empty arrays.
+	// Empty arrays appear because _remove() function
+	// does not remove arrays of length 1 after removing a single element in it
 	remove(sortedOutGrayishColors, (color) => {
 		return color.length === 0;
 	});
