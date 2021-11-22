@@ -1,7 +1,13 @@
 import colorutil from "color-util";
 import { remove } from "lodash";
 
-function sortHex(textFileWithColors, allowedRange, regexToGrabColors) {
+function sortHex(
+	textFileWithColors,
+	allowedRange,
+	regexToGrabColors,
+	lowestSaturationAllowed = 0.17,
+	lowestLightnessAllowed = 0.1
+) {
 	function convertHexToHSL(hexFormattedColor) {
 		let rgb;
 		if (hexFormattedColor.length > 8) {
@@ -70,7 +76,7 @@ function sortHex(textFileWithColors, allowedRange, regexToGrabColors) {
 			return b.counter - a.counter;
 		});
 	}
-	function sortOutGrayishColors(colorsSortedByRange, lowestSaturationAllowed = 0.17, lowestLightnessAllowed = 0.1) {
+	function sortOutGrayishColors(colorsSortedByRange, lowestSaturationAllowed, lowestLightnessAllowed) {
 		const grayishColorsArr = [];
 		for (let index = 0; index < colorsSortedByRange.length; index++) {
 			const group = colorsSortedByRange[index];
@@ -90,7 +96,11 @@ function sortHex(textFileWithColors, allowedRange, regexToGrabColors) {
 	});
 	const sortedColorsByHue = sortColorByHue(themeColors);
 	const splittedIntoGroups = splitArrIntoGroups(sortedColorsByHue);
-	const sortedOutGrayishColors = sortOutGrayishColors(splittedIntoGroups);
+	const sortedOutGrayishColors = sortOutGrayishColors(
+		splittedIntoGroups,
+		lowestSaturationAllowed,
+		lowestLightnessAllowed
+	);
 	// Removes empty arrays.
 	// Empty arrays appear because _remove() function
 	// does not remove arrays of length 1 after removing a single element in it

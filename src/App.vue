@@ -16,12 +16,16 @@
 		<p>Or select file from here</p>
 		<input type="file" @change="upload" />
 		<div>
-			<details>
+			<details class="advancedOptions">
 				<summary>Settings (dont touch it if u're unsure)</summary>
 				Regex:
 				<input v-model="regex" />
 				Allowed Range
 				<input type="number" v-model="allowedRange" />
+				Saturation threshold (colors with saturation below this value are considered gray-ish)
+				<input type="number" v-model="lowestSaturation" />
+				Lightness threshold (colors with lightness below this value are considered black)
+				<input type="number" v-model="lowestLightness" />
 			</details>
 		</div>
 	</template>
@@ -62,7 +66,9 @@ export default {
 			shiftedColors: [],
 			alphaValue: 1,
 			isDragover: false,
-			regex: "/#[A-F-a-f 0-9]{6,8}/gm"
+			regex: "/#[A-F-a-f 0-9]{6,8}/gm",
+			lowestSaturation: 0.17,
+			lowestLightness: 0.1
 		};
 	},
 	methods: {
@@ -72,11 +78,19 @@ export default {
 			const reader = new FileReader();
 			reader.onload = (file) => {
 				this.sourceText = file.target.result;
-				//eval isn't safe and blah blah blah ikr? It's here only because i want
-				//JiT compiler to compile my regex
-				//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#creating_a_regular_expression
-				const sortedColors = sortHex(file.target.result, this.allowedRange, eval(this.regex));
-				//following loop just adds csshsl property to "color" object
+				// eval isn't safe and blah blah blah ikr? It's here only because i want
+				// JiT compiler to compile my regex
+				// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#creating_a_regular_expression
+				// I wouldn't use anything like this in production tho.
+				// But since my application does not store any sensetive data (or data at all)
+				// i consider it to be fine
+				const sortedColors = sortHex(
+					file.target.result, 
+					this.allowedRange, 
+					eval(this.regex), 
+					this.lowestSaturation, 
+					this.lowestLightness);
+				// following loop just adds csshsl property to "color" object
 				for (let index = 0; index < sortedColors.length; index++) {
 					const group = sortedColors[index];
 					for (let index = 0; index < group.length; index++) {
@@ -84,7 +98,7 @@ export default {
 						color.csshsl = colorutil.hsl.to.csshsl(color.hsl);
 					}
 				}
-				//sort by length
+				// sort by length
 				sortedColors.sort((a, b) => {
 					return b.length - a.length;
 				});
@@ -148,5 +162,9 @@ export default {
 }
 .copyIcon:active {
 	filter: drop-shadow(0.5rem 0.5rem 1rem black);
+}
+
+.advancedOptions > input {
+	display: block
 }
 </style>
