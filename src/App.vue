@@ -85,11 +85,12 @@ export default {
 				// But since my application does not store any sensetive data (or data at all)
 				// i consider it to be fine
 				const sortedColors = sortHex(
-					file.target.result, 
-					this.allowedRange, 
-					eval(this.regex), 
-					this.lowestSaturation, 
-					this.lowestLightness);
+					file.target.result,
+					this.allowedRange,
+					eval(this.regex),
+					this.lowestSaturation,
+					this.lowestLightness
+				);
 				// following loop just adds csshsl property to "color" object
 				for (let index = 0; index < sortedColors.length; index++) {
 					const group = sortedColors[index];
@@ -165,6 +166,6 @@ export default {
 }
 
 .advancedOptions > input {
-	display: block
+	display: block;
 }
 </style>
