@@ -79,6 +79,13 @@ function sortOutGrayishColors(colorsSortedByRange, lowestSaturationAllowed, lowe
 	}
 	return grayishColorsArr.concat(colorsSortedByRange);
 }
+/**
+ * @param {number} allowedRange
+ * @param {number[]} grabbedColors
+ * @param {number} lowestSaturationAllowed
+ * @param {number} lowestLightnessAllowed
+ * @returns {object[]}
+ */
 export default function sortHex(
 	allowedRange,
 	grabbedColors,
