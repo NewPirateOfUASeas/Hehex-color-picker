@@ -80,14 +80,13 @@ function sortOutGrayishColors(colorsSortedByRange, lowestSaturationAllowed, lowe
 	return grayishColorsArr.concat(colorsSortedByRange);
 }
 export default function sortHex(
-	textFileWithColors,
 	allowedRange,
-	regexToGrabColors,
+	grabbedColors,
 	lowestSaturationAllowed = 0.17,
 	lowestLightnessAllowed = 0.1
 ) {
 	const themeColorsSet = new Set([]);
-	textFileWithColors.match(regexToGrabColors).forEach((matchingColor) => {
+	grabbedColors.forEach((matchingColor) => {
 		themeColorsSet.add(matchingColor);
 	});
 	const themeColors = Array.from(themeColorsSet).map((color) => {
