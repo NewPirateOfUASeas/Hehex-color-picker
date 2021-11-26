@@ -146,8 +146,8 @@ describe("color group", () => {
 		expect(trimmedHtml).toBe(expectedHtml);
 	});
 	it("shifts colors", async () => {
+		// Literally magic number. I've picked it randomly
 		await wrapper.setData({ hueShift: 0.14 });
-		await wrapper.vm.$nextTick();
 		expect(wrapper.emitted()).toStrictEqual(expectedEmit);
 	});
 });
