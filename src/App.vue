@@ -18,8 +18,6 @@
 		<div>
 			<details class="advancedOptions">
 				<summary>Settings (dont touch it if u're unsure)</summary>
-				Regex:
-				<input v-model="regex" />
 				Allowed Range
 				<input type="number" v-model="allowedRange" />
 				Saturation threshold (colors with saturation below this value are considered gray-ish)
@@ -66,7 +64,6 @@ export default {
 			shiftedColors: [],
 			alphaValue: 1,
 			isDragover: false,
-			regex: "/#[A-F-a-f 0-9]{6,8}/gm",
 			lowestSaturation: 0.17,
 			lowestLightness: 0.1
 		};
@@ -76,15 +73,10 @@ export default {
 			this.isDragover = false;
 			const files = $event.dataTransfer ? [...$event.dataTransfer.files] : [...$event.target.files];
 			const reader = new FileReader();
+			const regex = /#[A-F-a-f 0-9]{6,8}/gm;
 			reader.onload = (file) => {
 				this.sourceText = file.target.result;
-				// eval isn't safe and blah blah blah ikr? It's here only because i want
-				// JiT compiler to compile my regex
-				// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#creating_a_regular_expression
-				// I wouldn't use anything like this in production tho.
-				// But since my application does not store any sensetive data (or data at all)
-				// i consider it to be fine
-				const arr = file.target.result.match(eval(this.regex));
+				const arr = file.target.result.match(regex);
 				const sortedColors = sortHex(this.allowedRange, arr, this.lowestSaturation, this.lowestLightness);
 				// following loop just adds csshsl property to "color" object
 				for (let index = 0; index < sortedColors.length; index++) {
