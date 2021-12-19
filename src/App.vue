@@ -17,7 +17,7 @@
 		<input type="file" @change="upload" />
 		<div>
 			<details class="advancedOptions">
-				<summary>Settings (dont touch it if you aren't sure)</summary>
+				<summary>Settings (don't touch it if you aren't sure)</summary>
 				Allowed Range
 				<input type="number" v-model="allowedRange" />
 				Saturation threshold (colors with saturation below this value are considered gray-ish)
