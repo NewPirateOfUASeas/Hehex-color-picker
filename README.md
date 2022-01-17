@@ -1,4 +1,4 @@
-# color-editor
+# Hehex-color-picker
 
 ## Project setup
 
