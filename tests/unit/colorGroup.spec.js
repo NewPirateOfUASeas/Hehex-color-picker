@@ -29,7 +29,8 @@ const group = [
 ];
 const index = 8;
 
-const expectedHtml = `<h2>Group 9:</h2> Hue: <input step="1" type="number"> Saturation: <input step="1" type="number"> Lightness: <input step="1" type="number">
+const expectedHtml =
+	`<h2>Group 9:</h2> Hue: <input step="1" type="number"> Saturation: <input step="1" type="number"> Lightness: <input step="1" type="number">
 <div>
   <div class="colorSquare" style="background-color: rgb(47, 47, 47);"></div>
   <div class="colorSquare" style="background-color: rgb(34, 34, 34);"></div>
@@ -39,7 +40,9 @@ const expectedHtml = `<h2>Group 9:</h2> Hue: <input step="1" type="number"> Satu
   <div class="colorSquare" style="background-color: rgb(0, 0, 0);"></div>
   <div class="colorSquare" style="background-color: rgb(70, 70, 70);"></div>
   <div class="colorSquare" style="background-color: rgb(0, 0, 0);"></div>
-</div>`;
+</div>`
+		.trim()
+		.replace(/\s/g, "");
 
 const expectedEmit = {
 	"shifted-colors": [
@@ -143,7 +146,7 @@ describe("color group", () => {
 	});
 	const trimmedHtml = wrapper.html().trim().replace(/\s/g, "");
 	it("renders color elements", () => {
-		expect(trimmedHtml).toBe(expectedHtml.trim().replace(/\s/g, ""));
+		expect(trimmedHtml).toBe(expectedHtml);
 	});
 	it("shifts colors", async () => {
 		// Literally magic number. I've picked it randomly
