@@ -141,9 +141,9 @@ describe("color group", () => {
 			index
 		}
 	});
-	const trimmedHtml = wrapper.html().trim();
+	const trimmedHtml = wrapper.html().trim().replace(/\s/g, "");
 	it("renders color elements", () => {
-		expect(trimmedHtml).toBe(expectedHtml);
+		expect(trimmedHtml).toBe(expectedHtml.trim().replace(/\s/g, ""));
 	});
 	it("shifts colors", async () => {
 		// Literally magic number. I've picked it randomly

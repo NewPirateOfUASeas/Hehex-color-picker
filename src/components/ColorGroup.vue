@@ -75,8 +75,8 @@ export default {
 
 <style scoped>
 .colorSquare {
-	width: 25px;
-	height: 25px;
+	width: 1.5rem;
+	height: 1.5rem;
 	display: inline-flex;
 }
 </style>
