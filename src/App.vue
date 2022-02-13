@@ -3,8 +3,8 @@
 		<div
 			class="dragndropContainer"
 			:class="{ dragOver: isDragover }"
-			@drag.prevent.stop=""
-			@dragstart.prevent.stop=""
+			@drag.prevent.stop
+			@dragstart.prevent.stop
 			@dragend.prevent.stop="isDragover = false"
 			@dragover.prevent.stop="isDragover = true"
 			@dragenter.prevent.stop="isDragover = true"
@@ -29,7 +29,7 @@
 	</template>
 	<template v-else>
 		<!-- If i was fanatical about "single-responsiblity" i'd move it in separate component, but i'll
-		keep it here since i'm a sane person -->
+		keep it here since i'm a sane person-->
 		<div class="calculatedTextContainer" v-if="calculatedTextfile.length > 0">
 			{{ calculatedTextfile }}
 			<img @click="putCalculatedStyleInClipboard" class="copyIcon" src="./assets/icons/copy_icon.svg" />
@@ -75,22 +75,24 @@ export default {
 			const reader = new FileReader();
 			const regex = /#[A-F-a-f 0-9]{6,8}/gm;
 			reader.onload = (file) => {
-				this.sourceText = file.target.result;
 				const arr = file.target.result.match(regex);
-				const sortedColors = sortHex(this.allowedRange, arr, this.lowestSaturation, this.lowestLightness);
-				// following loop just adds csshsl property to "color" object
-				for (let index = 0; index < sortedColors.length; index++) {
-					const group = sortedColors[index];
-					for (let index = 0; index < group.length; index++) {
-						const color = group[index];
-						color.csshsl = colorutil.hsl.to.csshsl(color.hsl);
+				if (arr.length > 0) {
+					this.sourceText = file.target.result;
+					const sortedColors = sortHex(this.allowedRange, arr, this.lowestSaturation, this.lowestLightness);
+					// following loop just adds csshsl property to "color" object
+					for (let index = 0; index < sortedColors.length; index++) {
+						const group = sortedColors[index];
+						for (let index = 0; index < group.length; index++) {
+							const color = group[index];
+							color.csshsl = colorutil.hsl.to.csshsl(color.hsl);
+						}
 					}
+					// sort by length
+					sortedColors.sort((a, b) => {
+						return b.length - a.length;
+					});
+					this.dividedColors = sortedColors;
 				}
-				// sort by length
-				sortedColors.sort((a, b) => {
-					return b.length - a.length;
-				});
-				this.dividedColors = sortedColors;
 			};
 			reader.readAsText(files[0]);
 		},
